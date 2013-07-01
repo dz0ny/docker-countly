@@ -12,5 +12,5 @@ run     apt-get -y update
 run     cd /opt; git clone https://github.com/Countly/countly-server.git countly --depth 1
 #run     bash /opt/countly/bin/countly.install.sh
 
-expose :80
+#expose :80
 cmd  supervisord -n
