@@ -34,10 +34,9 @@ RUN apt-get install -y -q mongodb-10gen
 
 ## NODE
 RUN apt-get install -y -q nodejs
-
+ENV DEBIAN_FRONTEND dialog
 
 run     cd /opt; git clone https://github.com/Countly/countly-server.git countly --depth 1
 run     bash /opt/countly/bin/countly.install.sh
 
-#expose :80
-#cmd  supervisord -n
+expose :80
