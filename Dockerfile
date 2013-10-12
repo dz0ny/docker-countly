@@ -1,42 +1,50 @@
-FROM ubuntu
+FROM base
+
+env   DEBIAN_FRONTEND noninteractive
 
 # REPOS
-RUN apt-get -y update
-RUN apt-get install -y -q python-software-properties software-properties-common
-RUN add-apt-repository -y "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) universe"
-RUN add-apt-repository -y ppa:chris-lea/node.js
-RUN add-apt-repository -y ppa:nginx/stable
-RUN apt-key adv --keyserver keyserver.ubuntu.com --recv 7F0CEB10
-RUN echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' | tee /etc/apt/sources.list.d/10gen.list
-RUN apt-get -y update
+run    apt-get install -y software-properties-common
+run    add-apt-repository -y "deb http://archive.ubuntu.com/ubuntu $(lsb_release -sc) universe"
+run    add-apt-repository -y ppa:chris-lea/node.js
+run    add-apt-repository -y ppa:nginx/stable
+run    apt-key adv --keyserver keyserver.ubuntu.com --recv 7F0CEB10
+run    echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' | tee /etc/apt/sources.list.d/10gen.list
+run    apt-get --yes update
+run    apt-get --yes upgrade --force-yes
+run    apt-get --yes install git supervisor nginx --force-yes
 
 #SHIMS
-RUN dpkg-divert --local --rename --add /sbin/initctl
-RUN ln -s /bin/true /sbin/initctl
-ENV DEBIAN_FRONTEND noninteractive
-
-# EDITORS
-RUN apt-get install -y -q vim
-RUN apt-get install -y -q nano
+run    dpkg-divert --local --rename --add /sbin/initctl
+run    ln -s /bin/true /sbin/initctl
 
 # TOOLS
-RUN apt-get install -y -q curl
-RUN apt-get install -y -q git
-RUN apt-get install -y -q make
-RUN apt-get install -y -q wget
-
-# BUILD
-RUN apt-get install -y -q build-essential
-RUN apt-get install -y -q g++
+run    apt-get install -y -q curl git wget
 
 ## MONGO
-RUN apt-get install -y -q mongodb-10gen
+run    mkdir -p /data/db
+run    apt-get install -y -q mongodb-10gen
 
 ## NODE
-RUN apt-get install -y -q nodejs
-ENV DEBIAN_FRONTEND dialog
+run    apt-get install -y -q nodejs
+env   DEBIAN_FRONTEND dialog
 
-run     cd /opt; git clone https://github.com/Countly/countly-server.git countly --depth 1
-run     bash /opt/countly/bin/countly.install.sh
+run    mkdir -p /data/log
+run    cd /opt; git clone https://github.com/Countly/countly-server.git countly --depth 2
+run    apt-get install -y -q imagemagick sendmail build-essential --force-yes 
+run    apt-get install -y -q nginx --force-yes
+run    cd /opt/countly/api ; npm install time 
+run    rm /etc/nginx/sites-enabled/default
+run    cp  /opt/countly/bin/config/nginx.server.conf /etc/nginx/sites-enabled/default
+
+run    cp  /opt/countly/frontend/express/public/javascripts/countly/countly.config.sample.js  /opt/countly/frontend/express/public/javascripts/countly/countly.config.js
+run    cp  /opt/countly/api/config.sample.js  /opt/countly/api/config.js
+run    cp  /opt/countly/frontend/express/config.sample.js  /opt/countly/frontend/express/config.js
+
+add    ./supervisor/supervisord.conf /etc/supervisor/supervisord.conf
+add    ./supervisor/conf.d/nginx.conf /etc/supervisor/conf.d/nginx.conf
+add    ./supervisor/conf.d/mongodb.conf /etc/supervisor/conf.d/mongodb.conf
+add    ./supervisor/conf.d/countly.conf /etc/supervisor/conf.d/countly.conf
 
 expose :80
+volume ["/data"]
+ENTRYPOINT ["/usr/bin/supervisord"]
