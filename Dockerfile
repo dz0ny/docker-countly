@@ -11,7 +11,6 @@ run    apt-key adv --keyserver keyserver.ubuntu.com --recv 7F0CEB10
 run    echo 'deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen' | tee /etc/apt/sources.list.d/10gen.list
 run    apt-get --yes update
 run    apt-get --yes upgrade --force-yes
-run    apt-get --yes install git supervisor nginx --force-yes
 
 #SHIMS
 run    dpkg-divert --local --rename --add /sbin/initctl
@@ -28,10 +27,12 @@ run    apt-get install -y -q mongodb-10gen
 run    apt-get install -y -q nodejs
 env   DEBIAN_FRONTEND dialog
 
+## County required
+run    apt-get --yes install supervisor imagemagick nginx build-essential  --force-yes
+
+## Setup Countly
 run    mkdir -p /data/log
-run    cd /opt; git clone https://github.com/Countly/countly-server.git countly --depth 2
-run    apt-get install -y -q imagemagick sendmail build-essential --force-yes 
-run    apt-get install -y -q nginx --force-yes
+run    cd /opt; git clone https://github.com/Countly/countly-server.git countly --depth 1
 run    cd /opt/countly/api ; npm install time 
 run    rm /etc/nginx/sites-enabled/default
 run    cp  /opt/countly/bin/config/nginx.server.conf /etc/nginx/sites-enabled/default
