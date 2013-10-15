@@ -10,9 +10,7 @@ For more information on Countly and check out it's [website][1].
 Running this will build you a docker image with the latest stable version of both
 docker-countly and County itself.
 
-    git clone https://github.com/dz0ny/docker-countly.git
-    cd docker-countly
-    sudo docker build -t dz0ny/countly .
+    sudo docker build -t dz0ny/countly git://github.com/dz0ny/docker-countly.git
 
 
 ## Running docker-countly
